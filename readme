@@ -1,0 +1,25 @@
+To build:
+./gradlew shadowJar build jar
+to run:
+java -jar build/libs/NicknameMemory-1.0-all.jar
+
+before running, create these environment variables:
+DBURL: the JDBC connection string to the database you will be using
+DBUSER: the username for the database
+DBPASS: the password for the database
+OAUTH: the bot's token
+PREFIX: the command prefix
+LOGCHANNEL: the name of the channel to log actions in
+
+
+the only text command available is "reloadusers"
+it needs to be prefixed with the command prefix
+it will forcibly reload all members' roles and nicknames to the server
+It can only be used once after you start the bot. If you wish to reload everything again, restart the bot
+
+The database needs a table named "users"
+4 columns: userID, roles, nickname, serverID
+order matters
+all of them are text
+
+
