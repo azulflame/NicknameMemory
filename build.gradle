@@ -1,0 +1,25 @@
+plugins {
+    id'application'
+    id'com.github.johnrengelman.shadow' version '5.2.0'
+}
+
+mainClassName = 'com.azulflame.discord.Bot'
+
+version '1.0'
+def jdaVersion = '4.2.0_168'
+
+sourceCompatibility = targetCompatibility = 1.8
+
+repositories {
+    jcenter()
+}
+
+dependencies {
+    compile "net.dv8tion:JDA:$jdaVersion"
+    compile group: 'mysql', name: 'mysql-connector-java', version: '8.0.21'
+    compile group: 'org.slf4j', name: 'slf4j-api', version: '2.0.0-alpha1'
+    compile group: 'org.slf4j', name: 'slf4j-simple', version: '2.0.0-alpha1'
+
+}
+
+compileJava.options.encoding = 'UTF-8'
