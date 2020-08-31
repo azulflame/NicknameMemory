@@ -15,9 +15,9 @@ import java.sql.SQLException;
 
 public class Bot extends ListenerAdapter
 {
-	static String DB_URL = System.getenv("DBURL");
-	static String USER = System.getenv("DBUSER");
-	static String PASS = System.getenv("DBPASS");
+	static String DB_URL;
+	static String USER;
+	static String PASS;
 	static String OAUTH;
 	static String LOGCHANNEL;
 	static String PREFIX;
@@ -26,32 +26,32 @@ public class Bot extends ListenerAdapter
 	public static void main(String args[]) throws LoginException
 	{
 		boolean quit = false;
-		if(System.getenv("DBURL").equals("") || System.getenv("DBURL") == null)
+		if(System.getenv("DBURL") == null || System.getenv("DBURL").equals(""))
 		{
 			System.out.println("$DBURL not found");
 			quit = true;
 		}
-		if(System.getenv("DBUSER").equals("") || System.getenv("DBUSER") == null)
+		if(System.getenv("DBUSER") == null || System.getenv("DBUSER").equals(""))
 		{
 			System.out.println("$DBUSER not found");
 			quit = true;
 		}
-		if(System.getenv("DBPASS").equals("") || System.getenv("DBPASS") == null)
+		if(System.getenv("DBPASS") == null || System.getenv("DBPASS").equals(""))
 		{
 			System.out.println("$DBPASS not found");
 			quit = true;
 		}
-		if(System.getenv("OAUTH").equals("") || System.getenv("OAUTH") == null)
+		if(System.getenv("OAUTH") == null || System.getenv("OAUTH").equals(""))
 		{
 			System.out.println("$OAUTH not found");
 			quit = true;
 		}
-		if(System.getenv("PREFIX").equals("") || System.getenv("PREFIX") == null)
+		if(System.getenv("PREFIX") == null || System.getenv("PREFIX").equals(""))
 		{
 			System.out.println("$PREFIX not found");
 			quit = true;
 		}
-		if(System.getenv("LOGCHANNEL").equals("") || System.getenv("LOGCHANNEL") == null)
+		if(System.getenv("LOGCHANNEL") == null || System.getenv("LOGCHANNEL").equals(""))
 		{
 			System.out.println("$LOGCHANNEL not found");
 			quit = true;
