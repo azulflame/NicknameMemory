@@ -25,36 +25,16 @@ public class Bot extends ListenerAdapter
 
 	public static void main(String args[]) throws LoginException
 	{
+		String[] requiredEnvironmentVariables = {"DBURL", "DBUSER", "DBPASS","OAUTH", "PREFIX", "LOGCHANNEL" };
 		boolean quit = false;
-		if(System.getenv("DBURL") == null || System.getenv("DBURL").equals(""))
+		for(String s : requiredEnvironmentVariables)
 		{
-			System.out.println("$DBURL not found");
-			quit = true;
-		}
-		if(System.getenv("DBUSER") == null || System.getenv("DBUSER").equals(""))
-		{
-			System.out.println("$DBUSER not found");
-			quit = true;
-		}
-		if(System.getenv("DBPASS") == null || System.getenv("DBPASS").equals(""))
-		{
-			System.out.println("$DBPASS not found");
-			quit = true;
-		}
-		if(System.getenv("OAUTH") == null || System.getenv("OAUTH").equals(""))
-		{
-			System.out.println("$OAUTH not found");
-			quit = true;
-		}
-		if(System.getenv("PREFIX") == null || System.getenv("PREFIX").equals(""))
-		{
-			System.out.println("$PREFIX not found");
-			quit = true;
-		}
-		if(System.getenv("LOGCHANNEL") == null || System.getenv("LOGCHANNEL").equals(""))
-		{
-			System.out.println("$LOGCHANNEL not found");
-			quit = true;
+			
+			if (System.getenv(s) == null || System.getenv(s).equals(""))
+			{
+				System.out.println("$" + s + " not found");
+				quit = true;
+			}
 		}
 		if(quit)
 		{
