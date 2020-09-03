@@ -26,46 +26,27 @@ public class CommandListener extends ListenerAdapter
 	private static Task<List<Member>> memberLoadTask;
 	public CommandListener(String DB_URL, String USER, String PASS, String PREFIX, String LOGCHANNEL) throws SQLException
 	{
-		loadedServers = new ArrayList<String>();
+		loadedServers = new ArrayList<>();
 		this.PREFIX = PREFIX;
 		createDatabaseConnection(DB_URL, USER, PASS);
 		this.LOGCHANNEL = LOGCHANNEL;
 	}
-	private void createDatabaseConnection(String DB_URL, String USER, String PASS) throws SQLException
-	{
-		conn = DriverManager.getConnection(DB_URL, USER, PASS);
-	}
+
 	@Override
 	public void onGuildMemberRoleAdd(GuildMemberRoleAddEvent event)
 	{
-		roleUpdate(event);
+		StrippedMember member = new StrippedMember(event.getMember());
+		roleUpdate(event, member);
 	}
 	@Override
 	public void onGuildMemberRoleRemove(GuildMemberRoleRemoveEvent event)
 	{
-		roleUpdate(event);
+		StrippedMember member = new StrippedMember(event.getMember());
+		roleUpdate(event, member);
 	}
 	
-	private void roleUpdate(Event e)
+	private void roleUpdate(Event e, StrippedMember member)
 	{
-		StrippedMember member;
-		
-		if (e instanceof GuildMemberRoleAddEvent)
-		{
-			GuildMemberRoleAddEvent event = (GuildMemberRoleAddEvent) e;
-			member = new StrippedMember(event.getMember());
-		}
-		else if (e instanceof GuildMemberRoleRemoveEvent)
-		{
-			GuildMemberRoleRemoveEvent event = (GuildMemberRoleRemoveEvent) e;
-			member = new StrippedMember(event.getMember());
-		}
-		else
-		{
-			// should never be called, but the compiler demands it
-			member = new StrippedMember();
-		}
-
 		String query;
 		if(userDataExists(member))
 		{
@@ -192,7 +173,10 @@ public class CommandListener extends ListenerAdapter
 			}
 		}
 	}
-	
+	private void createDatabaseConnection(String DB_URL, String USER, String PASS) throws SQLException
+	{
+		conn = DriverManager.getConnection(DB_URL, USER, PASS);
+	}
 	private void storeUsers(List<Member> members)
 	{
 		Message temp = pendingFullLoadMessage;
