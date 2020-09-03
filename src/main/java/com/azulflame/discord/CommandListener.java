@@ -12,7 +12,11 @@ import net.dv8tion.jda.api.events.guild.member.update.GuildMemberUpdateNicknameE
 import net.dv8tion.jda.api.events.message.guild.GuildMessageReceivedEvent;
 import net.dv8tion.jda.api.hooks.ListenerAdapter;
 import net.dv8tion.jda.api.utils.concurrent.Task;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
+import java.io.PrintWriter;
+import java.io.StringWriter;
 import java.sql.*;
 import java.util.*;
 
@@ -24,20 +28,24 @@ public class CommandListener extends ListenerAdapter
 	private Connection conn;
 	private String LOGCHANNEL;
 	private static Task<List<Member>> memberLoadTask;
+	Logger logger;
+	
 	public CommandListener(String DB_URL, String USER, String PASS, String PREFIX, String LOGCHANNEL) throws SQLException
 	{
+		logger = LoggerFactory.getLogger(this.getClass());
 		loadedServers = new ArrayList<>();
 		this.PREFIX = PREFIX;
 		createDatabaseConnection(DB_URL, USER, PASS);
 		this.LOGCHANNEL = LOGCHANNEL;
 	}
-
+	
 	@Override
 	public void onGuildMemberRoleAdd(GuildMemberRoleAddEvent event)
 	{
 		StrippedMember member = new StrippedMember(event.getMember());
 		roleUpdate(event, member);
 	}
+	
 	@Override
 	public void onGuildMemberRoleRemove(GuildMemberRoleRemoveEvent event)
 	{
@@ -48,7 +56,7 @@ public class CommandListener extends ListenerAdapter
 	private void roleUpdate(Event e, StrippedMember member)
 	{
 		String query;
-		if(userDataExists(member))
+		if (userDataExists(member))
 		{
 			query = "update users set roles='" + member.getRoleString() + "' where userID = '" + member.getID() + "' and serverID = '" + member.getGuildID() + "'";
 		}
@@ -60,11 +68,18 @@ public class CommandListener extends ListenerAdapter
 		{
 			Statement s = conn.createStatement();
 			s.execute(query);
+			logger.info("Updated roles {} for user {} on guild {}", member.getRoleString(), member.getID(), member.getGuildID());
 		} catch (SQLException throwables)
 		{
-			logError(e.getJDA().getGuildById(member.getGuildID()), "Error running query `" + query);
+			logger.error("Error running query \"{}\" for user {} in guild {}", query, member.getID(), member.getGuildID());
+			StringWriter stringWriter = new StringWriter();
+			PrintWriter printWriter = new PrintWriter(stringWriter);
+			throwables.printStackTrace(printWriter);
+			logger.error("{}", stringWriter.toString());
+			logError(e.getJDA().getGuildById(member.getGuildID()), "Error updating roles for user `" + query + "`");
 		}
 	}
+	
 	@Override
 	public void onGuildMemberUpdateNickname(GuildMemberUpdateNicknameEvent event)
 	{
@@ -73,7 +88,7 @@ public class CommandListener extends ListenerAdapter
 		try
 		{
 			String query;
-			if(userDataExists(member))
+			if (userDataExists(member))
 			{
 				query = "update users set nickname='" + member.getNickname() + "' where userID = '" + member.getID() + "' and serverID = '" + member.getGuildID() + "'";
 			}
@@ -84,17 +99,23 @@ public class CommandListener extends ListenerAdapter
 			Statement s;
 			s = conn.createStatement();
 			s.execute(query);
-		}
-		catch(Exception e)
+			logger.info("Stored nickname {} for user {} on guild {}", member.getNickname(), member.getID(), member.getGuildID());
+		} catch (Exception e)
 		{
+			logger.error("Error updating nickname for user {} to {} in {}", member.getID(), member.getNickname(), member.getGuildID());
+			StringWriter stringWriter = new StringWriter();
+			PrintWriter printWriter = new PrintWriter(stringWriter);
+			e.printStackTrace(printWriter);
+			logger.error("{}", stringWriter.toString());
 			logError(event.getGuild(), "Error updating nickname for user " + member.getID() + " to " + member.getNickname());
 		}
 	}
+	
 	@Override
 	public void onGuildMemberJoin(GuildMemberJoinEvent event)
 	{
 		StrippedMember member = new StrippedMember(event.getMember());
-		// check if the user has been on the server before'
+		// check if the user has been on the server before
 		// if they have, assign the old roles and nickname
 		String query = "select userID, roles, nickname from users where userID = " + member.getID() + " and serverID = " + member.getGuildID();
 		Statement s;
@@ -114,71 +135,92 @@ public class CommandListener extends ListenerAdapter
 				if (nickname != null && nickname != "")
 				{
 					event.getMember().modifyNickname(nickname).queue();
+					logger.info("Applied nickname {} to user {} on {}", nickname, member.getID(), member.getGuildID());
 				}
 				// assign roles
-				if(roleString.length() > 0)
+				if (roleString.length() > 0)
 				{
 					String[] roleArray = roleString.split(",");
-					for (String str: roleArray)
+					for (String str : roleArray)
 					{
 						event.getGuild().addRoleToMember(event.getMember().getId(), event.getGuild().getRolesByName(str, true).get(0)).queue();
 					}
+					logger.info("Applied roles {} to user {} on {}", member.getRoleString(), member.getID(), member.getGuildID());
 				}
 			}
-		}
-		catch(SQLException ex)
+		} catch (SQLException ex)
 		{
+			logger.error("Unable to update user {} on guild {} to roles {} or nickname {} ", member.getID(), member.getGuildID(), member.getRoleString(), member.getNickname());
 			logError(event.getGuild(), "Unable to set role or nickname for user " + member.getID() + ", roles: " + member.getRoleString() + " nick: " + member.getNickname());
 		}
 	}
+	
 	@Override
 	public void onGuildMessageReceived(GuildMessageReceivedEvent event)
 	{
-		if(event.getAuthor().isBot())
+		if (event.getAuthor().isBot())
 		{
 			return;
 		}
-		if((event.getMember().hasPermission(Permission.ADMINISTRATOR) || event.getMember().getId().equals(System.getenv("OWNERID"))) && event.getMessage().getContentRaw().startsWith(PREFIX)) // creator override
+		if ((event.getMember().hasPermission(Permission.ADMINISTRATOR) || event.getMember().getId().equals(System.getenv("OWNERID"))) && event.getMessage().getContentRaw().startsWith(PREFIX)) // creator override
 		{
 			String compare1 = PREFIX + "reloadusers";
 			String compare2 = compare1 + " --confirm";
-			if(event.getMessage().getContentRaw().startsWith(compare2))
+			if (event.getMessage().getContentRaw().startsWith(compare2))
 			{
 				// reload the entire user cache
 				// but only if we haven't done it since the bot launched
-				if(loadedServers.contains(event.getGuild().getId()))
+				if (loadedServers.contains(event.getGuild().getId()))
 				{
 					logError(event.getGuild(), "The reload users command was attempted more than once after a bot reload");
 					event.getMessage().addReaction("❌").complete();
 					
 				}
-				else if (memberLoadTask == null || !memberLoadTask.isStarted())
-				{
-					pendingFullLoadMessage = event.getMessage();
-					pendingFullLoadMessage.addReaction("⌛").complete();
-					memberLoadTask = event.getGuild().loadMembers();
-					memberLoadTask.onSuccess(this::storeUsers);
-					loadedServers.add(event.getGuild().getId());
-				}
 				else
+					if (memberLoadTask == null || !memberLoadTask.isStarted())
+					{
+						pendingFullLoadMessage = event.getMessage();
+						pendingFullLoadMessage.addReaction("⌛").complete();
+						logger.info("Started pulling members for guild {}", event.getGuild().getId());
+						memberLoadTask = event.getGuild().loadMembers();
+						memberLoadTask.onSuccess(this::storeUsers);
+						memberLoadTask.onError(this::storeUsersError);
+						loadedServers.add(event.getGuild().getId());
+					}
+					else
+					{
+						logError(event.getGuild(), "The member reload is currently running");
+						event.getMessage().addReaction("❌").complete();
+					}
+				// red X to show that we aren't going to
+			}
+			else
+				if (event.getMessage().getContentRaw().startsWith(compare1))
 				{
-					logError(event.getGuild(), "The member reload is currently running");
-					event.getMessage().addReaction("❌").complete();
+					event.getChannel().sendMessage("You must run `reloadusers` with `--confirm`").complete();
 				}
-					// red X to show that we aren't going to
-			}
-			else if(event.getMessage().getContentRaw().startsWith(compare1))
-			{
-				event.getChannel().sendMessage( "You must run `reloadusers` with `--confirm`").complete();
-			}
 		}
 	}
+	
+	private void storeUsersError(Throwable throwable)
+	{
+		logger.error("Failed trying to pull users on guild {}", pendingFullLoadMessage.getGuild().getId());
+		StringWriter stringWriter = new StringWriter();
+		PrintWriter printWriter = new PrintWriter(stringWriter);
+		throwable.printStackTrace(printWriter);
+		logger.error("{}", stringWriter.toString());
+		logError(pendingFullLoadMessage.getGuild(), "Error pulling all users");
+		loadedServers.remove(pendingFullLoadMessage.getGuild().getId());
+		pendingFullLoadMessage = null;
+	}
+	
 	private void createDatabaseConnection(String DB_URL, String USER, String PASS) throws SQLException
 	{
 		conn = DriverManager.getConnection(DB_URL, USER, PASS);
 	}
 	private void storeUsers(List<Member> members)
 	{
+		logger.info("Success pulling users on guild {}", pendingFullLoadMessage.getGuild().getId());
 		Message temp = pendingFullLoadMessage;
 		for(Member m : members)
 		{
@@ -206,6 +248,8 @@ public class CommandListener extends ListenerAdapter
 		// finished with the pull
 		temp.clearReactions().complete();
 		temp.addReaction("✅").complete();
+		logger.info("All users stored into database for guild {}", temp.getGuild().getId());
+		pendingFullLoadMessage = null;
 	}
 	
 	private boolean userDataExists(StrippedMember member)
@@ -220,14 +264,18 @@ public class CommandListener extends ListenerAdapter
 		}
 		catch(Exception e)
 		{
+			logger.error("Error checking user data for user {} on guild {}", member.getID(), member.getGuildID());
+			StringWriter stringWriter = new StringWriter();
+			PrintWriter printWriter = new PrintWriter(stringWriter);
+			e.printStackTrace(printWriter);
+			logger.error("{}", stringWriter.toString());
 			return false;
 		}
 	}
-	
+	// log events to the logging channel
 	private void logEvent(Event event, StrippedMember member)
 	{
 		String toSend = "";
-		// sql can be weird, have to check all 3
 		if (member.getNickname().equals("") || member.getNickname().equals("NULL"))
 		{
 			toSend = member.getID() + " joined the server, restoring roles `" + member.getRoleString() + "`";
