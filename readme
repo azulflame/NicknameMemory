@@ -18,7 +18,11 @@ it will forcibly reload all members' roles and nicknames to the server
 It can only be used once after you start the bot. If you wish to reload everything again, restart the bot
 
 The database needs a table named "users"
-4 columns: userID, roles, nickname, serverID
+4 columns: 
+	userID varchar(100)
+	roles text
+	nickname text
+	serverID varchar(100)
 order matters
 all of them are text
 
