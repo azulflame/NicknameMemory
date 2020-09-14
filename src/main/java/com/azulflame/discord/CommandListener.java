@@ -146,6 +146,7 @@ public class CommandListener extends ListenerAdapter
 		String disconnect = PREFIX + "shutdown";
 		if(event.getMessage().getContentRaw().startsWith(disconnect) && event.getMember().getId().equals(System.getenv("OWNERID")))
 		{
+			event.getMessage().addReaction("✅").complete();
 			logger.info("Shutting down JDA at owner's request");
 			event.getJDA().shutdown();
 		}
