@@ -25,5 +25,3 @@ The database needs a table named "users"
 	serverID varchar(100)
 order matters
 all of them are text
-
-
