@@ -143,7 +143,8 @@ public class CommandListener extends ListenerAdapter
 		{
 			return;
 		}
-		if(event.getMessage().getContentRaw().startsWith(PREFIX) && event.getMember().getId().equals(System.getenv("OWNERID")))
+		String disconnect = PREFIX = "shutdown";
+		if(event.getMessage().getContentRaw().startsWith(disconnect) && event.getMember().getId().equals(System.getenv("OWNERID")))
 		{
 			System.exit(0); // if the owner says to shut down, exit
 		}
