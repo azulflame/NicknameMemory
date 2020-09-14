@@ -232,10 +232,6 @@ public class CommandListener extends ListenerAdapter
 			statement.setString(1, member.getID());
 			statement.setString(2, member.getGuildID());
 			ResultSet rs = statement.executeQuery();
-			if(rs.wasNull())
-			{
-				return false;
-			}
 			return rs.next();
 		}
 		catch(Exception e)
