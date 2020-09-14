@@ -132,14 +132,18 @@ public class CommandListener extends ListenerAdapter
 				// assign roles
 				if (roleString.length() > 0)
 				{
-				    if(roleString.length() > 0) {
-                        String[] roleArray = roleString.split(",");
-                        for (String str : roleArray) {
-                            event.getGuild().addRoleToMember(event.getMember().getId(), event.getGuild().getRolesByName(str, true).get(0)).queue();
-                        }
-                        logger.info("Applied roles {} to user {} on {} due to rejoin", member.getRoleString(), member.getID(), member.getGuildID());
-                    }
-				}
+					System.out.println("rs l: " + roleString.length());
+                        		String[] roleArray = roleString.split(",");
+					System.out.println("rsa l: " + roleArray.length);
+					if(roleArray.length > 0)
+					{
+                        			for (String str : roleArray)
+						{
+                        				event.getGuild().addRoleToMember(event.getMember().getId(), event.getGuild().getRolesByName(str, true).get(0)).queue();
+                        			}
+                        			logger.info("Applied roles {} to user {} on {} due to rejoin", member.getRoleString(), member.getID(), member.getGuildID());
+					}
+                		}
 			}
 		} catch (SQLException ex)
 		{
@@ -320,7 +324,7 @@ public class CommandListener extends ListenerAdapter
 	}
 	private void createUser(StrippedMember member) throws SQLException
 	{
-		String query = "insert into users (userID, roles, nickname, serverID) values ( ? , ? , ? , ?)";
+		String query = "insert into users (userID, nickname, roles, serverID) values ( ? , ? , ? , ?)";
 		PreparedStatement statement = conn.prepareStatement(query);
 		statement.setString(1, member.getID());
 		statement.setString(2, member.getNickname());
