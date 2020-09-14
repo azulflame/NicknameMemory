@@ -231,7 +231,6 @@ public class CommandListener extends ListenerAdapter
 			PreparedStatement statement= conn.prepareStatement(query);
 			statement.setString(1, member.getID());
 			statement.setString(2, member.getGuildID());
-			System.out.println(statement.toString());
 			ResultSet rs = statement.executeQuery();
 			if(rs.wasNull())
 			{
