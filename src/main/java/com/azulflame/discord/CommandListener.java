@@ -103,7 +103,7 @@ public class CommandListener extends ListenerAdapter
 			statement = conn.prepareStatement(query);
 			statement.setString(1, member.getID());
 			statement.setString(2, member.getGuildID());
-			ResultSet rs = statement.executeQuery(query);
+			ResultSet rs = statement.executeQuery();
 			if (rs.next()) // if we have a user with the same ID
 			{
 				// get the last nickname and roles
@@ -231,7 +231,12 @@ public class CommandListener extends ListenerAdapter
 			PreparedStatement statement= conn.prepareStatement(query);
 			statement.setString(1, member.getID());
 			statement.setString(2, member.getGuildID());
-			ResultSet rs = statement.executeQuery(query);
+			System.out.println(statement.toString());
+			ResultSet rs = statement.executeQuery();
+			if(rs.wasNull())
+			{
+				return false;
+			}
 			return rs.next();
 		}
 		catch(Exception e)
@@ -274,7 +279,7 @@ public class CommandListener extends ListenerAdapter
 			statement.setString(1, member.getNickname());
 			statement.setString(2, member.getID());
 			statement.setString(3, member.getGuildID());
-			statement.execute();
+			statement.executeUpdate();
 		}
 		else
 		{
@@ -292,7 +297,7 @@ public class CommandListener extends ListenerAdapter
 			statement.setString(1,member.getRoleString());
 			statement.setString(2, member.getID());
 			statement.setString(3, member.getGuildID());
-			statement.execute();
+			statement.executeUpdate();
 		}
 		else
 		{
@@ -307,6 +312,6 @@ public class CommandListener extends ListenerAdapter
 		statement.setString(2, member.getNickname());
 		statement.setString(3, member.getRoleString());
 		statement.setString(4, member.getGuildID());
-		statement.execute();
+		statement.executeUpdate();
 	}
 }
