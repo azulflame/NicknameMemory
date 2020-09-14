@@ -135,7 +135,7 @@ public class CommandListener extends ListenerAdapter
 			logError(event.getGuild(), "Unable to set role or nickname for user " + member.getID() + ", roles: " + member.getRoleString() + " nick: " + member.getNickname());
 		}
 	}
-	
+
 	@Override
 	public void onGuildMessageReceived(GuildMessageReceivedEvent event)
 	{
@@ -143,7 +143,11 @@ public class CommandListener extends ListenerAdapter
 		{
 			return;
 		}
-		if ((event.getMember().hasPermission(Permission.ADMINISTRATOR) || event.getMember().getId().equals(System.getenv("OWNERID"))) && event.getMessage().getContentRaw().startsWith(PREFIX)) // creator override
+		if(event.getMessage().getContentRaw().startsWith(PREFIX) && event.getMember().getId().equals(System.getenv("OWNERID")))
+		{
+			System.exit(0); // if the owner says to shut down, exit
+		}
+		if (event.getMessage().getContentRaw().startsWith(PREFIX) && (event.getMember().hasPermission(Permission.ADMINISTRATOR) || event.getMember().getId().equals(System.getenv("OWNERID")))) // creator override
 		{
 			String compare1 = PREFIX + "reloadusers";
 			String compare2 = compare1 + " --confirm";
