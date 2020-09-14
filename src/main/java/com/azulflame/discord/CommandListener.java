@@ -143,10 +143,11 @@ public class CommandListener extends ListenerAdapter
 		{
 			return;
 		}
-		String disconnect = PREFIX = "shutdown";
+		String disconnect = PREFIX + "shutdown";
 		if(event.getMessage().getContentRaw().startsWith(disconnect) && event.getMember().getId().equals(System.getenv("OWNERID")))
 		{
-			System.exit(0); // if the owner says to shut down, exit
+			logger.info("Shutting down JDA at owner's request");
+			event.getJDA().shutdown();
 		}
 		if (event.getMessage().getContentRaw().startsWith(PREFIX) && (event.getMember().hasPermission(Permission.ADMINISTRATOR) || event.getMember().getId().equals(System.getenv("OWNERID")))) // creator override
 		{
