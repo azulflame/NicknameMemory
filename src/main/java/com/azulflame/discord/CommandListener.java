@@ -149,7 +149,7 @@ public class CommandListener extends ListenerAdapter
 			logger.info("Shutting down JDA at owner's request");
 			event.getJDA().shutdown();
 		}
-		if (event.getMessage().getContentRaw().startsWith(PREFIX) && (event.getMember().hasPermission(Permission.ADMINISTRATOR) || event.getMember().getId().equals(System.getenv("OWNERID")))) // creator override
+		else if (event.getMessage().getContentRaw().startsWith(PREFIX) && (event.getMember().hasPermission(Permission.ADMINISTRATOR) || event.getMember().getId().equals(System.getenv("OWNERID")))) // creator override
 		{
 			String compare1 = PREFIX + "reloadusers";
 			String compare2 = compare1 + " --confirm";
