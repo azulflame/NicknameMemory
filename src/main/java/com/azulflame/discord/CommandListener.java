@@ -55,28 +55,18 @@ public class CommandListener extends ListenerAdapter
 	
 	private void roleUpdate(Event e, StrippedMember member)
 	{
-		String query;
-		if (userDataExists(member))
-		{
-			query = "update users set roles='" + member.getRoleString() + "' where userID = '" + member.getID() + "' and serverID = '" + member.getGuildID() + "'";
-		}
-		else
-		{
-			query = "insert into users values ('" + member.getID() + "', '" + member.getRoleString() + "', '" + member.getNickname() + "', '" + member.getGuildID() + "')";
-		}
 		try
 		{
-			Statement s = conn.createStatement();
-			s.execute(query);
+			updateRoles(member);
 			logger.info("Updated roles {} for user {} on guild {}", member.getRoleString(), member.getID(), member.getGuildID());
 		} catch (SQLException throwables)
 		{
-			logger.error("Error running query \"{}\" for user {} in guild {}", query, member.getID(), member.getGuildID());
+			logger.error("Error updating roles to {} for user {} in guild {}", member.getRoleString(), member.getID(), member.getGuildID());
 			StringWriter stringWriter = new StringWriter();
 			PrintWriter printWriter = new PrintWriter(stringWriter);
 			throwables.printStackTrace(printWriter);
 			logger.error("{}", stringWriter.toString());
-			logError(e.getJDA().getGuildById(member.getGuildID()), "Error updating roles for user `" + query + "`");
+			logError(e.getJDA().getGuildById(member.getGuildID()), "Error updating roles for user `" + member.getID() + "`");
 		}
 	}
 	
@@ -87,18 +77,7 @@ public class CommandListener extends ListenerAdapter
 		member.setNickname(event.getNewNickname());
 		try
 		{
-			String query;
-			if (userDataExists(member))
-			{
-				query = "update users set nickname='" + member.getNickname() + "' where userID = '" + member.getID() + "' and serverID = '" + member.getGuildID() + "'";
-			}
-			else
-			{
-				query = "insert into users values ('" + member.getID() + "', '" + member.getRoleString() + "', '" + member.getNickname() + "', '" + member.getGuildID() + "')";
-			}
-			Statement s;
-			s = conn.createStatement();
-			s.execute(query);
+			updateNickname(member);
 			logger.info("Stored nickname {} for user {} on guild {}", member.getNickname(), member.getID(), member.getGuildID());
 		} catch (Exception e)
 		{
@@ -117,12 +96,14 @@ public class CommandListener extends ListenerAdapter
 		StrippedMember member = new StrippedMember(event.getMember());
 		// check if the user has been on the server before
 		// if they have, assign the old roles and nickname
-		String query = "select userID, roles, nickname from users where userID = " + member.getID() + " and serverID = " + member.getGuildID();
-		Statement s;
+		String query = "select userID, roles, nickname from users where userID = ? and serverID = ?";
+		PreparedStatement statement;
 		try
 		{
-			s = conn.createStatement();
-			ResultSet rs = s.executeQuery(query);
+			statement = conn.prepareStatement(query);
+			statement.setString(1, member.getID());
+			statement.setString(2, member.getGuildID());
+			ResultSet rs = statement.executeQuery(query);
 			if (rs.next()) // if we have a user with the same ID
 			{
 				// get the last nickname and roles
@@ -227,22 +208,12 @@ public class CommandListener extends ListenerAdapter
 			StrippedMember member = new StrippedMember(m);
 			try
 			{
-				if(!userDataExists(member))
-				{
-					Statement s = conn.createStatement();
-					String query = "insert into users values ('" + member.getID() + "', '" + member.getRoleString() + "', '" + member.getNickname() + "', '" + member.getGuildID() + "')";
-					s.execute(query);
-				}
-				else
-				{
-					Statement s = conn.createStatement();
-					String query = "update users set roles='" + member.getRoleString() + "', nickname='" + member.getNickname() + "' where userID = '" + member.getID() + "' and serverID = " + member.getGuildID();
-					s.execute(query);
-				}
+				updateNickname(member);
+				updateRoles(member);
 			}
 			catch (SQLException throwables)
 			{
-				logError(pendingFullLoadMessage.getGuild(), "Error loading user error for user " + member.getID());
+				logError(pendingFullLoadMessage.getGuild(), "Error loading user info for user " + member.getID());
 			}
 		}
 		// finished with the pull
@@ -254,12 +225,13 @@ public class CommandListener extends ListenerAdapter
 	
 	private boolean userDataExists(StrippedMember member)
 	{
-		String query = "select userID from users where userID = '" + member.getID() + "' and serverID = '" + member.getGuildID() + "'";
+		String query = "select userID from users where userID = ? and serverID = ?";
 		try
 		{
-			Statement s;
-			s = conn.createStatement();
-			ResultSet rs = s.executeQuery(query);
+			PreparedStatement statement= conn.prepareStatement(query);
+			statement.setString(1, member.getID());
+			statement.setString(2, member.getGuildID());
+			ResultSet rs = statement.executeQuery(query);
 			return rs.next();
 		}
 		catch(Exception e)
@@ -289,5 +261,52 @@ public class CommandListener extends ListenerAdapter
 	private void logError(Guild g, String output)
 	{
 		g.getTextChannelsByName(LOGCHANNEL, true).get(0).sendMessage(output).complete();
+	}
+
+	private void updateNickname(StrippedMember member) throws SQLException
+	{
+		PreparedStatement statement;
+		String query;
+		if (userDataExists(member))
+		{
+			query = "update users set nickname = ? where userID = ? and serverID = ?";
+			statement = conn.prepareStatement(query);
+			statement.setString(1, member.getNickname());
+			statement.setString(2, member.getID());
+			statement.setString(3, member.getGuildID());
+			statement.execute();
+		}
+		else
+		{
+			createUser(member);
+		}
+	}
+	private void updateRoles(StrippedMember member) throws SQLException
+	{
+		String query;
+		PreparedStatement statement;
+		if(userDataExists(member))
+		{
+			query = "update users set roles = ? where userID = ? and serverID = ?";
+			statement = conn.prepareStatement(query);
+			statement.setString(1,member.getRoleString());
+			statement.setString(2, member.getID());
+			statement.setString(3, member.getGuildID());
+			statement.execute();
+		}
+		else
+		{
+			createUser(member);
+		}
+	}
+	private void createUser(StrippedMember member) throws SQLException
+	{
+		String query = "insert into users (userID, roles, nickname, serverID) values ( ? , ? , ? , ?)";
+		PreparedStatement statement = conn.prepareStatement(query);
+		statement.setString(1, member.getID());
+		statement.setString(2, member.getNickname());
+		statement.setString(3, member.getRoleString());
+		statement.setString(4, member.getGuildID());
+		statement.execute();
 	}
 }
