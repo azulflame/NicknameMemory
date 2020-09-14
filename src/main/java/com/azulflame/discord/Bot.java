@@ -9,6 +9,7 @@ import net.dv8tion.jda.api.utils.cache.CacheFlag;
 
 import javax.security.auth.login.LoginException;
 import java.sql.SQLException;
+import java.util.ArrayList;
 
 public class Bot extends ListenerAdapter
 {
@@ -61,6 +62,5 @@ public class Bot extends ListenerAdapter
 			e.printStackTrace();
 		}
 	}
-
 
 }

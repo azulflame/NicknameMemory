@@ -10,6 +10,7 @@ import net.dv8tion.jda.api.events.guild.member.GuildMemberRoleAddEvent;
 import net.dv8tion.jda.api.events.guild.member.GuildMemberRoleRemoveEvent;
 import net.dv8tion.jda.api.events.guild.member.update.GuildMemberUpdateNicknameEvent;
 import net.dv8tion.jda.api.events.message.guild.GuildMessageReceivedEvent;
+import net.dv8tion.jda.api.exceptions.InsufficientPermissionException;
 import net.dv8tion.jda.api.hooks.ListenerAdapter;
 import net.dv8tion.jda.api.utils.concurrent.Task;
 import org.slf4j.Logger;
@@ -59,7 +60,11 @@ public class CommandListener extends ListenerAdapter
 		{
 			updateRoles(member);
 			logger.info("Updated roles {} for user {} on guild {}", member.getRoleString(), member.getID(), member.getGuildID());
-		} catch (SQLException throwables)
+		} catch(InsufficientPermissionException e)
+        {
+            logger.error("Insuffecient permissions to change nickname");
+            logError(e.getGuild(), "Lacking permissions to assign a nickname to user " + member.getID());
+        }catch (SQLException throwables)
 		{
 			logger.error("Error updating roles to {} for user {} in guild {}", member.getRoleString(), member.getID(), member.getGuildID());
 			StringWriter stringWriter = new StringWriter();
@@ -79,7 +84,13 @@ public class CommandListener extends ListenerAdapter
 		{
 			updateNickname(member);
 			logger.info("Stored nickname {} for user {} on guild {}", member.getNickname(), member.getID(), member.getGuildID());
-		} catch (Exception e)
+		}
+		catch(InsufficientPermissionException e)
+        {
+            logger.error("Insuffecient permissions to change nickname");
+            logError(event.getGuild(), "Lacking permissions to assign a nickname to user " + member.getID());
+        }
+		catch (Exception e)
 		{
 			logger.error("Error updating nickname for user {} to {} in {}", member.getID(), member.getNickname(), member.getGuildID());
 			StringWriter stringWriter = new StringWriter();
@@ -116,17 +127,18 @@ public class CommandListener extends ListenerAdapter
 				if (nickname != null && nickname != "")
 				{
 					event.getMember().modifyNickname(nickname).queue();
-					logger.info("Applied nickname {} to user {} on {}", nickname, member.getID(), member.getGuildID());
+					logger.info("Applied nickname {} to user {} on {} due to rejoin", nickname, member.getID(), member.getGuildID());
 				}
 				// assign roles
 				if (roleString.length() > 0)
 				{
-					String[] roleArray = roleString.split(",");
-					for (String str : roleArray)
-					{
-						event.getGuild().addRoleToMember(event.getMember().getId(), event.getGuild().getRolesByName(str, true).get(0)).queue();
-					}
-					logger.info("Applied roles {} to user {} on {}", member.getRoleString(), member.getID(), member.getGuildID());
+				    if(roleString.length() > 0) {
+                        String[] roleArray = roleString.split(",");
+                        for (String str : roleArray) {
+                            event.getGuild().addRoleToMember(event.getMember().getId(), event.getGuild().getRolesByName(str, true).get(0)).queue();
+                        }
+                        logger.info("Applied roles {} to user {} on {} due to rejoin", member.getRoleString(), member.getID(), member.getGuildID());
+                    }
 				}
 			}
 		} catch (SQLException ex)
