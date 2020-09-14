@@ -60,10 +60,10 @@ public class CommandListener extends ListenerAdapter
 		{
 			updateRoles(member);
 			logger.info("Updated roles {} for user {} on guild {}", member.getRoleString(), member.getID(), member.getGuildID());
-		} catch(InsufficientPermissionException e)
+		} catch(InsufficientPermissionException exception)
         {
             logger.error("Insuffecient permissions to change nickname");
-            logError(e.getGuild(), "Lacking permissions to assign a nickname to user " + member.getID());
+            logError(e.getJDA().getGuildById(member.getGuildID()), "Lacking permissions to assign a nickname to user " + member.getID());
         }catch (SQLException throwables)
 		{
 			logger.error("Error updating roles to {} for user {} in guild {}", member.getRoleString(), member.getID(), member.getGuildID());
