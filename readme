@@ -1,5 +1,8 @@
+The first time you run this, run:
+./gradlew shadowJar
+
 To build:
-./gradlew shadowJar build jar
+./gradlew build jar
 to run:
 java -jar build/libs/NicknameMemory-1.0-all.jar
 
@@ -25,5 +28,3 @@ The database needs a table named "users"
 	serverID varchar(100)
 order matters
 all of them are text
-
-
