@@ -4,6 +4,7 @@ import net.dv8tion.jda.api.entities.Member;
 import net.dv8tion.jda.api.entities.Role;
 
 import java.util.List;
+import java.util.stream.Collectors;
 
 public class StrippedMember
 {
@@ -34,16 +35,8 @@ public class StrippedMember
 	
 	private String rolesToString(List<Role> roleList)
 	{
-		String out = "";
-		for(int i = 0; i < roleList.size(); i++)
-		{
-			out += roleList.get(i).getName() + ",";
-		}
-		if(out.length() > 0)
-		{
-			out = out.substring(0, out.length() - 1);
-		}
-		return out;
+		// generate a comma-delimited list of role IDs the user has
+		return roleList.stream().map(role -> role.getId().toString()).collect(Collectors.joining(","));
 	}
 	
 	public String getID() { return id;}

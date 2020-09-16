@@ -5,9 +5,7 @@ package com.azulflame.discord;/*
 import net.dv8tion.jda.api.Permission;
 import net.dv8tion.jda.api.entities.*;
 import net.dv8tion.jda.api.events.Event;
-import net.dv8tion.jda.api.events.guild.member.GuildMemberJoinEvent;
-import net.dv8tion.jda.api.events.guild.member.GuildMemberRoleAddEvent;
-import net.dv8tion.jda.api.events.guild.member.GuildMemberRoleRemoveEvent;
+import net.dv8tion.jda.api.events.guild.member.*;
 import net.dv8tion.jda.api.events.guild.member.update.GuildMemberUpdateNicknameEvent;
 import net.dv8tion.jda.api.events.message.guild.GuildMessageReceivedEvent;
 import net.dv8tion.jda.api.exceptions.InsufficientPermissionException;
@@ -39,7 +37,6 @@ public class CommandListener extends ListenerAdapter
 		createDatabaseConnection(DB_URL, USER, PASS);
 		this.LOGCHANNEL = LOGCHANNEL;
 	}
-	
 	@Override
 	public void onGuildMemberRoleAdd(GuildMemberRoleAddEvent event)
 	{
@@ -135,7 +132,7 @@ public class CommandListener extends ListenerAdapter
                         		String[] roleArray = roleString.split(",");
                        			for (String str : roleArray)
 					{
-                       				event.getGuild().addRoleToMember(event.getMember().getId(), event.getGuild().getRolesByName(str, true).get(0)).queue();
+                       				event.getGuild().addRoleToMember(event.getMember().getId(), event.getGuild().getRoleById(str)).queue();
                        			}
                        			logger.info("Applied roles {} to user {} on {} due to rejoin", member.getRoleString(), member.getID(), member.getGuildID());
                 		}
