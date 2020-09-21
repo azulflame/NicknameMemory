@@ -179,40 +179,48 @@ public class CommandListener extends ListenerAdapter
 			logger.info("Shutting down JDA at owner's request");
 			event.getJDA().shutdown();
 		}
-		else if(event.getMessage().getContentRaw().startsWith(PREFIX) && (event.getMember().hasPermission(Permission.ADMINISTRATOR) || event.getMember().getId().equals(System.getenv("OWNERID")))) // creator override
+		if(event.getMessage().getContentRaw().startsWith(PREFIX))
 		{
-			String compare1 = PREFIX + "reloadusers";
-			String compare2 = compare1 + " --confirm";
-			if(event.getMessage().getContentRaw().startsWith(compare2))
+			String sourceCommand = PREFIX + "source";
+			if(event.getMessage().getContentRaw().startsWith(sourceCommand))
 			{
-				// reload the entire user cache
-				// but only if we haven't done it since the bot launched
-				if(loadedServers.contains(event.getGuild().getId()))
-				{
-					logError(event.getGuild(), "The reload users command was attempted more than once after a bot reload");
-					event.getMessage().addReaction("❌").complete();
-
-				}
-				else if(memberLoadTask == null || !memberLoadTask.isStarted())
-				{
-					pendingFullLoadMessage = event.getMessage();
-					pendingFullLoadMessage.addReaction("⌛").complete();
-					logger.info("Started pulling members for guild {}", event.getGuild().getId());
-					memberLoadTask = event.getGuild().loadMembers();
-					memberLoadTask.onSuccess(this::storeUsers);
-					memberLoadTask.onError(this::storeUsersError);
-					loadedServers.add(event.getGuild().getId());
-				}
-				else
-				{
-					logError(event.getGuild(), "The member reload is currently running");
-					event.getMessage().addReaction("❌").complete();
-				}
-				// red X to show that we aren't going to
+				event.getChannel().sendMessage("https://github.com/azulflame/NicknameMemory").queue();
 			}
-			else if(event.getMessage().getContentRaw().startsWith(compare1))
+			else if(event.getMember().hasPermission(Permission.ADMINISTRATOR) || event.getMember().getId().equals(System.getenv("OWNERID"))) // creator override
 			{
-				event.getChannel().sendMessage("You must run `reloadusers` with `--confirm`").complete();
+				String compare1 = PREFIX + "reloadusers";
+				String compare2 = compare1 + " --confirm";
+				if(event.getMessage().getContentRaw().startsWith(compare2))
+				{
+					// reload the entire user cache
+					// but only if we haven't done it since the bot launched
+					if(loadedServers.contains(event.getGuild().getId()))
+					{
+						logError(event.getGuild(), "The reload users command was attempted more than once after a bot reload");
+						event.getMessage().addReaction("❌").complete();
+
+					}
+					else if(memberLoadTask == null || !memberLoadTask.isStarted())
+					{
+						pendingFullLoadMessage = event.getMessage();
+						pendingFullLoadMessage.addReaction("⌛").complete();
+						logger.info("Started pulling members for guild {}", event.getGuild().getId());
+						memberLoadTask = event.getGuild().loadMembers();
+						memberLoadTask.onSuccess(this::storeUsers);
+						memberLoadTask.onError(this::storeUsersError);
+						loadedServers.add(event.getGuild().getId());
+					}
+					else
+					{
+						logError(event.getGuild(), "The member reload is currently running");
+						event.getMessage().addReaction("❌").complete();
+					}
+					// red X to show that we aren't going to
+				}
+				else if(event.getMessage().getContentRaw().startsWith(compare1))
+				{
+					event.getChannel().sendMessage("You must run `reloadusers` with `--confirm`").complete();
+				}
 			}
 		}
 	}
