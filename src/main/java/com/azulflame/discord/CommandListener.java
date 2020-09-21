@@ -152,7 +152,7 @@ public class CommandListener extends ListenerAdapter
 					}
 					catch(InsufficientPermissionException ex)
 					{
-						logger.info("Failed to apply roles to ?: Insufficient Permissions");
+						logger.info("Failed to apply roles to {}: Insufficient Permissions");
 						logError(event.getGuild(), "Missing permission " + ex.getPermission().toString() + " to assign roles to joining users");
 					}
 				}
