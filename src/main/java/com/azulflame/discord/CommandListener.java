@@ -29,17 +29,15 @@ public class CommandListener extends ListenerAdapter
 	private Message pendingFullLoadMessage;
 	private ArrayList<String> loadedServers;
 	private String PREFIX;
-	private Connection conn;
 	private String LOGCHANNEL;
 	private static Task<List<Member>> memberLoadTask;
 	Logger logger;
 
-	public CommandListener(String DB_URL, String USER, String PASS, String PREFIX, String LOGCHANNEL) throws SQLException
+	public CommandListener(String PREFIX, String LOGCHANNEL)
 	{
 		logger = LoggerFactory.getLogger(this.getClass());
 		loadedServers = new ArrayList<>();
 		this.PREFIX = PREFIX;
-		createDatabaseConnection(DB_URL, USER, PASS);
 		this.LOGCHANNEL = LOGCHANNEL;
 	}
 
@@ -104,7 +102,7 @@ public class CommandListener extends ListenerAdapter
 		PreparedStatement statement;
 		try
 		{
-			statement = conn.prepareStatement(query);
+			statement = ConnectionManager.getConnection().prepareStatement(query);
 			statement.setString(1, member.getID());
 			statement.setString(2, member.getGuildID());
 			ResultSet rs = statement.executeQuery();
@@ -237,11 +235,6 @@ public class CommandListener extends ListenerAdapter
 		pendingFullLoadMessage = null;
 	}
 
-	private void createDatabaseConnection(String DB_URL, String USER, String PASS) throws SQLException
-	{
-		conn = DriverManager.getConnection(DB_URL, USER, PASS);
-	}
-
 	private void storeUsers(List<Member> members)
 	{
 		logger.info("Success pulling users on guild {}", pendingFullLoadMessage.getGuild().getId());
@@ -288,7 +281,7 @@ public class CommandListener extends ListenerAdapter
 	private void addOrUpdateUser(StrippedMember member) throws SQLException
 	{
 		String query = "INSERT INTO users (userID, nickname, roles, serverID) VALUES ( ? , ? , ? , ?) ON DUPLICATE KEY UPDATE nickname = ?, roles = ?";
-		PreparedStatement statement = conn.prepareStatement(query);
+		PreparedStatement statement = ConnectionManager.getConnection().prepareStatement(query);
 		statement.setString(1, member.getID());
 		statement.setString(2, member.getNickname());
 		statement.setString(3, member.getRoleString());

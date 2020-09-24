@@ -46,10 +46,11 @@ public class Bot extends ListenerAdapter
 		LOGCHANNEL = System.getenv("LOGCHANNEL");
 		try
 		{
+			ConnectionManager.init(DB_URL, USER, PASS);
 			JDA bot = JDABuilder.create(OAUTH, GatewayIntent.GUILD_MESSAGES, GatewayIntent.GUILD_MEMBERS)
 					.disableCache(CacheFlag.ACTIVITY, CacheFlag.VOICE_STATE, CacheFlag.EMOTE, CacheFlag.CLIENT_STATUS)
 					.setMemberCachePolicy(MemberCachePolicy.ALL)
-					.addEventListeners(new CommandListener(DB_URL, USER, PASS, PREFIX, LOGCHANNEL))
+					.addEventListeners(new CommandListener(PREFIX, LOGCHANNEL))
 					.build();
 			bot.awaitReady();
 		}
