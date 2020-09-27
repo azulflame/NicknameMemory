@@ -32,7 +32,7 @@ public class CommandListener extends ListenerAdapter
 	private final String PREFIX;
 	private final String LOGCHANNEL;
 	private static Task<List<Member>> memberLoadTask;
-	Logger logger;
+	static Logger logger;
 
 	public CommandListener(String PREFIX, String LOGCHANNEL)
 	{
