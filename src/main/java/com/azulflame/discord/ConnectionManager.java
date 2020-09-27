@@ -31,6 +31,7 @@ public class ConnectionManager
 	{
 		try
 		{
+			// run a quick validation query
 			Statement connectionTest = conn.createStatement();
 			ResultSet rs = connectionTest.executeQuery("SELECT 1");
 			if(rs.next())
@@ -41,14 +42,17 @@ public class ConnectionManager
 		}
 		catch(SQLException throwables)
 		{
-			if(numFailures >= 4)
+			// if the validation query fails, attempt to reconnect up to 5 times
+			if(numFailures < 5)
 			{
-				numFailures = 0;
-				return null;
+				reconnect();
+				return getConnection();
 			}
-			reconnect();
-			return getConnection();
+			else
+			{
+				numFailures++;
+			}
 		}
-		return null;
+		throw new SQLTimeoutException();
 	}
 }

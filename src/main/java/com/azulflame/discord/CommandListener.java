@@ -23,13 +23,14 @@ import java.io.StringWriter;
 import java.sql.*;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Objects;
 
 public class CommandListener extends ListenerAdapter
 {
 	private Message pendingFullLoadMessage;
-	private ArrayList<String> loadedServers;
-	private String PREFIX;
-	private String LOGCHANNEL;
+	private final ArrayList<String> loadedServers;
+	private final String PREFIX;
+	private final String LOGCHANNEL;
 	private static Task<List<Member>> memberLoadTask;
 	Logger logger;
 
@@ -115,7 +116,7 @@ public class CommandListener extends ListenerAdapter
 				member.setNickname(nickname);
 				logEvent(event, member);
 				// assign nickname
-				if(nickname != null && nickname != "")
+				if(nickname != null && !nickname.equals(""))
 				{
 					try
 					{
@@ -143,14 +144,14 @@ public class CommandListener extends ListenerAdapter
 							}
 							else
 							{
-								event.getGuild().addRoleToMember(event.getMember().getId(), event.getGuild().getRoleById(str)).queue();
+								event.getGuild().addRoleToMember(event.getMember().getId(), Objects.requireNonNull(event.getGuild().getRoleById(str))).queue();
 							}
 						}
 						logger.info("Applied roles {} to user {} on {} due to rejoin", member.getRoleString(), member.getID(), member.getGuildID());
 					}
 					catch(InsufficientPermissionException ex)
 					{
-						logger.info("Failed to apply roles to {}: Insufficient Permissions");
+						logger.info("Failed to apply roles to {}: Insufficient Permissions", member.getID());
 						logError(event.getGuild(), "Missing permission " + ex.getPermission().toString() + " to assign roles to joining users");
 					}
 				}
@@ -171,7 +172,7 @@ public class CommandListener extends ListenerAdapter
 			return;
 		}
 		String disconnect = PREFIX + "shutdown";
-		if(event.getMessage().getContentRaw().startsWith(disconnect) && event.getMember().getId().equals(System.getenv("OWNERID")))
+		if(event.getMessage().getContentRaw().startsWith(disconnect) && Objects.requireNonNull(event.getMember()).getId().equals(System.getenv("OWNERID")))
 		{
 			event.getMessage().addReaction("✅").complete();
 			logger.info("Shutting down JDA at owner's request");
@@ -184,7 +185,7 @@ public class CommandListener extends ListenerAdapter
 			{
 				event.getChannel().sendMessage("https://github.com/azulflame/NicknameMemory").queue();
 			}
-			else if(event.getMember().hasPermission(Permission.ADMINISTRATOR) || event.getMember().getId().equals(System.getenv("OWNERID"))) // creator override
+			else if(Objects.requireNonNull(event.getMember()).hasPermission(Permission.ADMINISTRATOR) || event.getMember().getId().equals(System.getenv("OWNERID"))) // creator override
 			{
 				String compare1 = PREFIX + "reloadusers";
 				String compare2 = compare1 + " --confirm";
@@ -261,7 +262,7 @@ public class CommandListener extends ListenerAdapter
 	// log events to the logging channel
 	private void logEvent(Event event, StrippedMember member)
 	{
-		String toSend = "";
+		String toSend;
 		if(member.getNickname().equals("") || member.getNickname().equals("NULL"))
 		{
 			toSend = member.getID() + " joined the server, restoring roles `" + member.getRoleString() + "`";
@@ -270,7 +271,7 @@ public class CommandListener extends ListenerAdapter
 		{
 			toSend = member.getID() + " joined the channel, restoring roles `" + member.getRoleString() + "` and nickname `" + member.getNickname() + "`";
 		}
-		event.getJDA().getGuildById(member.getGuildID()).getTextChannelsByName(LOGCHANNEL, true).get(0).sendMessage(toSend).complete();
+		Objects.requireNonNull(event.getJDA().getGuildById(member.getGuildID())).getTextChannelsByName(LOGCHANNEL, true).get(0).sendMessage(toSend).complete();
 	}
 
 	private void logError(Guild g, String output)

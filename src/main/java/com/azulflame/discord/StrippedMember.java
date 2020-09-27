@@ -1,5 +1,6 @@
 package com.azulflame.discord;
 
+import net.dv8tion.jda.api.entities.ISnowflake;
 import net.dv8tion.jda.api.entities.Member;
 import net.dv8tion.jda.api.entities.Role;
 
@@ -8,18 +9,10 @@ import java.util.stream.Collectors;
 
 public class StrippedMember
 {
-	private String id;
-	private String guildID;
+	private final String id;
+	private final String guildID;
 	private String roles;
 	private String nickname;
-	
-	public StrippedMember()
-	{
-		id = "";
-		guildID = "";
-		roles = "";
-		nickname = "";
-	}
 	
 	public StrippedMember(Member member)
 	{
@@ -36,7 +29,7 @@ public class StrippedMember
 	private String rolesToString(List<Role> roleList)
 	{
 		// generate a comma-delimited list of role IDs the user has
-		return roleList.stream().map(role -> role.getId().toString()).collect(Collectors.joining(","));
+		return roleList.stream().map(ISnowflake::getId).collect(Collectors.joining(","));
 	}
 	
 	public String getID() { return id;}
